@@ -1,0 +1,16 @@
+{
+  "name": "audio-assist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Idan Izhaki",
+  "license": "ISC",
+  "devDependencies": {
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  }
+}
