@@ -11,88 +11,120 @@ class AudioAssist {
         this.ttsActive = false
     }
     async init (){
-        this.ac = await new this.AC()
-        if(this.ac){
-            this.mGainNode = this.ac.createGain()
-            this.mGainNode.gain.setValueAtTime(0.5, this.ac.currentTime)
-            this.mGainNode.connect(this.ac.destination)
+        audioAssist.ac = await new audioAssist.AC()
+        if(audioAssist.ac){
+            audioAssist.mGainNode = audioAssist.ac.createGain()
+            audioAssist.mGainNode.gain.setValueAtTime(0.5, audioAssist.ac.currentTime)
+            audioAssist.mGainNode.connect(audioAssist.ac.destination)
         }
-        await this.addListeners()
+        await audioAssist.addListeners()
     }
     async reset(){
-        if(this.ac){
-            this.ac.close()
+        if(audioAssist.ac){
+            audioAssist.ac.close()
         }
-        await this.removeListeners()
+        await audioAssist.removeListeners()
     }
+    debounce = (func: any, delay:number = 300) => {
+        let timer: any
+        return (...args: any) => {
+            clearTimeout(timer)
+            timer = setTimeout(() => { func(...args) }, delay)
+        }
+    }
+    speakHandler = this.debounce(this.speak, 300)
     removeListeners(){
         let elem: NodeList = document.body.querySelectorAll('*')
         elem.forEach(element => {
-            element.removeEventListener('mouseenter', this.handleMouseEnter)
-            element.removeEventListener('keyup', this.handleKeyup)
-            this.ttsActive = false
+            element.removeEventListener('mouseenter', audioAssist.handleMouseEnter)
+            element.removeEventListener('keyup', audioAssist.handleKeyup)
+            audioAssist.ttsActive = false
         })
     }
     handleMouseEnter(e: any){
-            audioAssist.speak(e.target.textContent)
+            audioAssist.handleHtmlTags(e)
+    }
+    handleHtmlTags(e: any){
+        const isRequired = e.target.required ? "Required" : ""
+        if(e.target.tagName === "INPUT" && e.target.type !== "checkbox"){
+            const value = e.target.value ? e.target.value : e.target.placeholder
+            const text = `${isRequired}, ${e.target.tagName}, ${value}`
+            audioAssist.speakHandler(text)
+        } else if(e.target.tagName === "INPUT" && e.target.type === "checkbox"){
+            const isChecked = e.target.checked ? "Checked" : "Not checked"
+            const text = `${isChecked}, ${isRequired}, ${e.target.type}, ${e.target.placeholder}`
+            audioAssist.speakHandler(text)
+        } else if (e.target.tagName === "SELECT"){
+            const text = `${e.target.tagName}, ${e.target.value}`
+            audioAssist.speakHandler(text)
+        }else {
+            audioAssist.speakHandler(e.target.textContent)
+        }
     }
     handleKeyup(e: any){
         switch(e.which){
-            case 9: if(e.target.textContent) {
-                audioAssist.speak(e.target.textContent)
-            }
+            case 9: audioAssist.handleHtmlTags(e)
+            break
+            case 13: audioAssist.handleHtmlTags(e)
+            break
+            case 32: audioAssist.handleHtmlTags(e)
+            break
+            case 38: audioAssist.handleHtmlTags(e)
+            break
+            case 40: audioAssist.handleHtmlTags(e)
+            break
         }
     }
     addListeners(){
         let elem: NodeList = document.body.querySelectorAll('*')
         elem.forEach(element => {
-            element.addEventListener('mouseenter', this.handleMouseEnter)
-            element.addEventListener('keyup', this.handleKeyup)
-            this.ttsActive = true
+            element.addEventListener('mouseenter', audioAssist.handleMouseEnter)
+            element.addEventListener('keyup', audioAssist.handleKeyup)
+            audioAssist.ttsActive = true
         })
     }
     playTone(stopAfter: number = 2000){
-        if(!this.ac || !this.mGainNode) return
-        if(this.mOscNode){
-            this.mOscNode.stop()
+        if(!audioAssist.ac || !audioAssist.mGainNode) return
+        if(audioAssist.mOscNode){
+            audioAssist.mOscNode.stop()
         }
-        this.mOscNode = this.ac.createOscillator()
-        this.mOscNode.connect(this.mGainNode)
-        this.mOscNode.start()
+        audioAssist.mOscNode = audioAssist.ac.createOscillator()
+        audioAssist.mOscNode.connect(audioAssist.mGainNode)
+        audioAssist.mOscNode.start()
         if(stopAfter){
             setTimeout(() => { 
-                if(this.mOscNode){
-                    this.mOscNode.stop()
+                if(audioAssist.mOscNode){
+                    audioAssist.mOscNode.stop()
                 }
             }, stopAfter)
         }
     }
     test(): void{
-        if(!this.ac || !this.mGainNode) {
-            this.init()
-            .then(() => this.playTone(1000))
+        if(!audioAssist.ac || !audioAssist.mGainNode) {
+            audioAssist.init()
+            .then(() => audioAssist.playTone(1000))
             .catch(err => console.error(err))
             return
         } 
-        this.playTone(1000)
+        audioAssist.playTone(1000)
     }
     testSpeech(): void{
         const greeting = "Hi, Speech synthesizer is working correctly"
-        this.speak(greeting, 4)
+        audioAssist.speak(greeting, 4)
     }
-    speak(text: string, voice?: number): void{
-        if(!this.ttsActive) return
-        if(this.ss.speaking){
-            this.ss.cancel()
+    speak(text: string, voice: number = 4): void{
+        if(!audioAssist.ttsActive) return
+        if(audioAssist.ss.speaking){
+            audioAssist.ss.cancel()
         }
         const sentences = text.split(/[\.\!\?\...]/g)
         sentences.forEach(sentence => {
             const utter = new SpeechSynthesisUtterance(sentence)
             if(voice){
-                const voices = this.ss.getVoices()
+                const voices = audioAssist.ss.getVoices()
                 utter.voice = voices[voice]
             }
-            this.ss.speak(utter)
+            audioAssist.ss.speak(utter)
         })
     }
 }
