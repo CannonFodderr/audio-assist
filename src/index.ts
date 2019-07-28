@@ -1,9 +1,9 @@
 class AudioAssist {
     private AC: any
     private ss: SpeechSynthesis
-    ac?: AudioContext
-    mGainNode?: GainNode
-    mOscNode?: OscillatorNode
+    private ac?: AudioContext
+    private mGainNode?: GainNode
+    private mOscNode?: OscillatorNode
     ttsActive: boolean
     constructor(AC: any, SS: any){
         this.AC = AC
