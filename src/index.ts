@@ -4,9 +4,11 @@ class AudioAssist {
     ac?: AudioContext
     mGainNode?: GainNode
     mOscNode?: OscillatorNode
+    ttsActive: boolean
     constructor(AC: any, SS: any){
         this.AC = AC
         this.ss = SS
+        this.ttsActive = false
     }
     async init (){
         this.ac = await new this.AC()
@@ -17,19 +19,36 @@ class AudioAssist {
         }
         await this.addListeners()
     }
-    addListeners(){
-        var elem: NodeList = document.body.querySelectorAll('*')
+    async reset(){
+        if(this.ac){
+            this.ac.close()
+        }
+        await this.removeListeners()
+    }
+    removeListeners(){
+        let elem: NodeList = document.body.querySelectorAll('*')
         elem.forEach(element => {
-            element.addEventListener('mouseenter', (e: any) => {
+            element.removeEventListener('mouseenter', this.handleMouseEnter)
+            element.removeEventListener('keyup', this.handleKeyup)
+            this.ttsActive = false
+        })
+    }
+    handleMouseEnter(e: any){
+            audioAssist.speak(e.target.textContent)
+    }
+    handleKeyup(e: any){
+        switch(e.which){
+            case 9: if(e.target.textContent) {
                 audioAssist.speak(e.target.textContent)
-            })
-            element.addEventListener('keyup', (e: any) => {
-                switch(e.which){
-                    case 9: if(e.target.textContent) {
-                        audioAssist.speak(e.target.textContent)
-                    }
-                }
-            })
+            }
+        }
+    }
+    addListeners(){
+        let elem: NodeList = document.body.querySelectorAll('*')
+        elem.forEach(element => {
+            element.addEventListener('mouseenter', this.handleMouseEnter)
+            element.addEventListener('keyup', this.handleKeyup)
+            this.ttsActive = true
         })
     }
     playTone(stopAfter: number = 2000){
@@ -62,6 +81,7 @@ class AudioAssist {
         this.speak(greeting, 4)
     }
     speak(text: string, voice?: number): void{
+        if(!this.ttsActive) return
         if(this.ss.speaking){
             this.ss.cancel()
         }
