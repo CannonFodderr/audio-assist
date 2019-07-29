@@ -112,6 +112,18 @@ class AudioAssist {
         const greeting = "Hi, Speech synthesizer is working correctly"
         audioAssist.speak(greeting, 4)
     }
+    constructSentence = (text: string) => {
+        const words = text.split(" ")
+        let reCostructed: string = ""
+        words.forEach(word => {
+            switch(word){
+                case "TTS": reCostructed += `Text To Speech`
+                break
+                default: reCostructed += ` ${word}`
+            }
+        })
+        return reCostructed
+    }
     speak(text: string, voice: number = 4): void{
         if(!audioAssist.ttsActive) return
         if(audioAssist.ss.speaking){
@@ -119,7 +131,8 @@ class AudioAssist {
         }
         const sentences = text.split(/[\.\!\?\...]/g)
         sentences.forEach(sentence => {
-            const utter = new SpeechSynthesisUtterance(sentence)
+            const reconstructed = audioAssist.constructSentence(sentence)
+            const utter = new SpeechSynthesisUtterance(reconstructed)
             if(voice){
                 const voices = audioAssist.ss.getVoices()
                 utter.voice = voices[voice]
